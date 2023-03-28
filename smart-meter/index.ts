@@ -1,14 +1,8 @@
-import { SmartMeterReader } from "./SmartMeterReader";
+import { Server } from "./Server";
 
-// Change your serial port here:
-const serialport = '/dev/ttyS1';
+require('dotenv').config();
 
-const initializeSmartMeter = async () => {
-    await SmartMeterReader.getInstance().initializePort(serialport, true);
-    SmartMeterReader.getInstance().read();
-    return true;
-}
+const port = process.env.PORT || '3000';
 
-initializeSmartMeter().then((open) => {
-    console.log('Smart smeter ready to read');
-});
+const server = new Server(Number(port));
+server.start();

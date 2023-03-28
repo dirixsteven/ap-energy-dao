@@ -3,9 +3,6 @@ import * as crc from 'crc';
 import { SerialPortStream } from "@serialport/stream";
 import { MockBinding, MockBindingInterface, MockPortBinding } from '@serialport/binding-mock';
 import { obiscodes } from './obiscodes';
-import { Account } from 'web3-core';
-import { APEnergyOnlineMonitoring } from '../../middleware/types/web3-v1-contracts';
-import web3middleware from '../middleware/web3middleware';
 
 interface P1TelegramLine {
   obiscode?: string;
@@ -13,16 +10,11 @@ interface P1TelegramLine {
   unit?: string;
 }
 
-let contractAddress: string | any;
-let web3: any;
-let contract: APEnergyOnlineMonitoring;
-
 export class SmartMeterReader {
   private static instance: SmartMeterReader;
   public serialPort: SerialPort | SerialPortStream<MockBindingInterface> | null = null;
   private debug: boolean = false;
   private p1telegram: string = '';
-  private account: Account | null = null;
 
   private constructor() {
   };
@@ -31,13 +23,11 @@ export class SmartMeterReader {
     if (!SmartMeterReader.instance) {
       SmartMeterReader.instance = new SmartMeterReader();
     }
-
     return SmartMeterReader.instance;
   }
 
   public async initializePort(path: string, mock: boolean, debug: boolean = false) {
     this.debug = debug;
-    ({ contractAddress, web3, contract } = await web3middleware());
     if (!mock) {
       this.serialPort = new SerialPort({ path, baudRate: 115200 });
     } else {
@@ -45,10 +35,6 @@ export class SmartMeterReader {
       MockBinding.createPort(path, { echo: true, record: true });
       this.serialPort = new SerialPortStream({ binding: MockBinding, path, baudRate: 115200 });
     }
-  }
-
-  public setAccount(account: Account) {
-    this.account = account;
   }
 
   public async read() {
@@ -133,34 +119,34 @@ export class SmartMeterReader {
           if (output[i].obiscode === "1-0:2.8.1") { dayProduction = output[i].value?.toString(); }
         }
 
-        if (this.account && timestamp && dayConsumption && dayProduction) {
-          const transactionConfig = {
-            from: this.account.address,
-            to: contractAddress,
-            // value: 0,
-            gasPrice: await web3.eth.getGasPrice(),
-            gasLimit: 30000000,
-            nonce: await web3.eth.getTransactionCount(this.account.address),
-            data: contract.methods.logPowerConsumption(timestamp, dayConsumption, dayProduction).encodeABI()
-          }
+        // if (this.account && timestamp && dayConsumption && dayProduction) {
+        //   const transactionConfig = {
+        //     from: this.account.address,
+        //     to: contractAddress,
+        //     // value: 0,
+        //     gasPrice: await web3.eth.getGasPrice(),
+        //     gasLimit: 30000000,
+        //     nonce: await web3.eth.getTransactionCount(this.account.address),
+        //     data: contract.methods.logPowerConsumption(timestamp, dayConsumption, dayProduction).encodeABI()
+        //   }
 
-          const signedTransaction = await web3.eth.accounts.signTransaction(transactionConfig, this.account.privateKey);
+        //   const signedTransaction = await web3.eth.accounts.signTransaction(transactionConfig, this.account.privateKey);
 
-          const transactionReceipt = await web3.eth.sendSignedTransaction(signedTransaction.rawTransaction);
+        //   const transactionReceipt = await web3.eth.sendSignedTransaction(signedTransaction.rawTransaction);
         
-          const events = await contract.getPastEvents('allEvents', {
-            fromBlock: transactionReceipt && transactionReceipt.blockNumber,
-            toBlock: transactionReceipt && transactionReceipt.blockNumber
-          })
+        //   const events = await contract.getPastEvents('allEvents', {
+        //     fromBlock: transactionReceipt && transactionReceipt.blockNumber,
+        //     toBlock: transactionReceipt && transactionReceipt.blockNumber
+        //   })
         
-          console.log({
-            event: events[0].event, 
-            resource: events[0].returnValues["resource"],
-            timestamp: events[0].returnValues["timestamp"],
-            dayConsumption: events[0].returnValues["dayConsumption"],
-            dayProduction: events[0].returnValues["dayProduction"]
-          });
-        }
+        //   console.log({
+        //     event: events[0].event, 
+        //     resource: events[0].returnValues["resource"],
+        //     timestamp: events[0].returnValues["timestamp"],
+        //     dayConsumption: events[0].returnValues["dayConsumption"],
+        //     dayProduction: events[0].returnValues["dayProduction"]
+        //   });
+        // }
 
       }
     }

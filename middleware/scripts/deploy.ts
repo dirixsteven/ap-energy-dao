@@ -1,15 +1,19 @@
 import { ethers } from 'hardhat';
+require('dotenv').config();
+import fs from 'fs';
 
 async function main() {
-    const EnergyOnlineMonitoring = await ethers.getContractFactory("APEnergyOnlineMonitoring");
+    const APEnergyContractFactory = await ethers.getContractFactory("APEnergy");
 
-    const energyOnlineMonitoring = await EnergyOnlineMonitoring.deploy();
+    const APEnergyContract = await APEnergyContractFactory.deploy();
     
-    await energyOnlineMonitoring.deployed();
+    await APEnergyContract.deployed();
     
     console.log(
-        `EnergyOnlineMonitoring deployed to ${energyOnlineMonitoring.address}`
+        `EnergyOnlineMonitoring deployed to ${APEnergyContract.address}`
     );
+
+    fs.writeFileSync('./address.txt', APEnergyContract.address);
 }
     
     // We recommend this pattern to be able to use async/await everywhere
