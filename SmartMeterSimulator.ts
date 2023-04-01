@@ -1,3 +1,5 @@
+// 6ZvydZVgLf25UmN
+
 import { Chance } from 'chance';
 import { crc16modbus } from 'crc';
 import { SmartMeterReader } from './SmartMeterReader';

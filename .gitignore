@@ -1,5 +1,6 @@
 middleware/node_modules
 smart-meter/node_modules
+smart-meter-reader/node_modules
 .env
 coverage
 coverage.json
