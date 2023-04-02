@@ -1,6 +1,7 @@
 import { ReadlineParser, SerialPort } from 'serialport';
 import * as crc from 'crc';
 import fs from 'fs';
+import readline from 'readline';
 import { SerialPortStream } from "@serialport/stream";
 import { MockBinding, MockBindingInterface, MockPortBinding } from '@serialport/binding-mock';
 import { obiscodes } from './util/obiscodes';
@@ -17,6 +18,7 @@ export class SmartMeterReader {
   public serialPort: SerialPort | SerialPortStream<MockBindingInterface> | null = null;
   private debug: boolean = false;
   private p1telegram: string = '';
+  private mock: boolean = false;
 
   private constructor() {
   };
@@ -32,26 +34,36 @@ export class SmartMeterReader {
     this.debug = debug;
     if (!mock) {
       this.serialPort = new SerialPort({ path, baudRate: 115200 });
+      this.mock = false;
     } else {
       // Create a port and enable the echo and recording.
       MockBinding.createPort(path, { echo: true, record: true });
+      this.mock = true;
       this.serialPort = new SerialPortStream({ binding: MockBinding, path, baudRate: 115200 });
     }
   }
 
   public async read() {
-    this.serialPort && this.serialPort.on('data', (data: Buffer) => {
-      (data) && this.readLine(data.toString());
-    });
-    
-    /*
-    const parser = new ReadlineParser({delimiter: '\r\n', includeDelimiter: true, encoding: 'ascii'});
+    if (this.mock) {
+      // const parser = new ReadlineParser({delimiter: '\r\n', includeDelimiter: true, encoding: 'ascii'});
 
-    // read input from serial port
-    this.serialPort?.pipe(parser).on('data', async (p1line) => {
-      await this.readLine(p1line);
-    })
-    */
+      // // read input from serial port
+      // this.serialPort?.pipe(parser).on('data', async (p1line) => {
+      //   await this.readLine(p1line);
+      // })
+      const rl = readline.createInterface({
+        input: fs.createReadStream('./p1telegram.txt'),
+        crlfDelay: Infinity,
+      });
+      rl.on('line', (line) => {
+        this.readLine(line + "\r\n");
+      })
+
+    } else {
+      this.serialPort && this.serialPort.on('data', (data: Buffer) => {
+        (data) && this.readLine(data.toString());
+      });
+    }
   }
 
   public emitTestData(generateTelegram: Function, interval: number, limit: number) {
@@ -107,7 +119,7 @@ export class SmartMeterReader {
       }
       if (this.checkcrc(this.p1telegram)) {
         // Write telegram to file
-        fs.appendFileSync('./p1telegram.txt', this.p1telegram);
+        if (!this.mock) fs.appendFileSync('./p1telegram.txt', this.p1telegram);
 
         // parse telegram contents, line by line
         const output: P1TelegramLine[] = [];
@@ -121,7 +133,6 @@ export class SmartMeterReader {
           }
         }
 
-        console.table(output);
 
 
         let timestamp, dayConsumption, dayProduction;
@@ -131,7 +142,19 @@ export class SmartMeterReader {
           if (output[i].obiscode === "1-0:1.8.1") { dayConsumption = output[i].value?.toString(); }
           if (output[i].obiscode === "1-0:2.8.1") { dayProduction = output[i].value?.toString(); }
         }
-
+        
+        const date = timestamp && new Date(
+          parseInt(timestamp.substring(0, 2)) + 2000, 
+          parseInt(timestamp.substring(2, 4)) - 1,
+          parseInt(timestamp.substring(4, 6)), 
+          parseInt(timestamp.substring(6, 8)), 
+          parseInt(timestamp.substring(8, 10)), 
+          parseInt(timestamp.substring(10, 12))
+        );        
+        
+        const totalSeconds = date && this.getTotalSeconds(date.getHours(), date.getMinutes(), date.getSeconds())
+        
+        if (totalSeconds && totalSeconds % 15 == 0) console.table(output);
         // if (this.account && timestamp && dayConsumption && dayProduction) {
         //   const transactionConfig = {
         //     from: this.account.address,
@@ -257,5 +280,9 @@ export class SmartMeterReader {
       }
     }
     return [parseFloat(str.trim()), ''];
+  }
+
+  private getTotalSeconds(hour: number, minute: number, second: number): number {
+    return hour * 3600 + minute * 60 + second;
   }
 }

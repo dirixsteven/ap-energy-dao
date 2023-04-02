@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SmartMeterReader = void 0;
 const serialport_1 = require("serialport");
 const fs_1 = __importDefault(require("fs"));
+const readline_1 = __importDefault(require("readline"));
 const stream_1 = require("@serialport/stream");
 const binding_mock_1 = require("@serialport/binding-mock");
 const obiscodes_1 = require("./util/obiscodes");
@@ -15,6 +16,7 @@ class SmartMeterReader {
         this.serialPort = null;
         this.debug = false;
         this.p1telegram = '';
+        this.mock = false;
     }
     ;
     static getInstance() {
@@ -27,25 +29,35 @@ class SmartMeterReader {
         this.debug = debug;
         if (!mock) {
             this.serialPort = new serialport_1.SerialPort({ path, baudRate: 115200 });
+            this.mock = false;
         }
         else {
             // Create a port and enable the echo and recording.
             binding_mock_1.MockBinding.createPort(path, { echo: true, record: true });
+            this.mock = true;
             this.serialPort = new stream_1.SerialPortStream({ binding: binding_mock_1.MockBinding, path, baudRate: 115200 });
         }
     }
     async read() {
-        this.serialPort && this.serialPort.on('data', (data) => {
-            (data) && this.readLine(data.toString());
-        });
-        /*
-        const parser = new ReadlineParser({delimiter: '\r\n', includeDelimiter: true, encoding: 'ascii'});
-    
-        // read input from serial port
-        this.serialPort?.pipe(parser).on('data', async (p1line) => {
-          await this.readLine(p1line);
-        })
-        */
+        if (this.mock) {
+            // const parser = new ReadlineParser({delimiter: '\r\n', includeDelimiter: true, encoding: 'ascii'});
+            // // read input from serial port
+            // this.serialPort?.pipe(parser).on('data', async (p1line) => {
+            //   await this.readLine(p1line);
+            // })
+            const rl = readline_1.default.createInterface({
+                input: fs_1.default.createReadStream('./p1telegram.txt'),
+                crlfDelay: Infinity,
+            });
+            rl.on('line', (line) => {
+                this.readLine(line + "\r\n");
+            });
+        }
+        else {
+            this.serialPort && this.serialPort.on('data', (data) => {
+                (data) && this.readLine(data.toString());
+            });
+        }
     }
     emitTestData(generateTelegram, interval, limit) {
         if (this.serialPort instanceof (stream_1.SerialPortStream))
@@ -101,7 +113,8 @@ class SmartMeterReader {
             }
             if (this.checkcrc(this.p1telegram)) {
                 // Write telegram to file
-                fs_1.default.appendFileSync('./p1telegram.txt', this.p1telegram);
+                if (!this.mock)
+                    fs_1.default.appendFileSync('./p1telegram.txt', this.p1telegram);
                 // parse telegram contents, line by line
                 const output = [];
                 for (const line of this.p1telegram.toString().split('\r\n')) {
@@ -113,7 +126,6 @@ class SmartMeterReader {
                         }
                     }
                 }
-                console.table(output);
                 let timestamp, dayConsumption, dayProduction;
                 for (let i = 0; i < output.length; i++) {
                     if (output[i].obiscode === "0-0:1.0.0") {
@@ -126,6 +138,10 @@ class SmartMeterReader {
                         dayProduction = (_c = output[i].value) === null || _c === void 0 ? void 0 : _c.toString();
                     }
                 }
+                const date = timestamp && new Date(parseInt(timestamp.substring(0, 2)) + 2000, parseInt(timestamp.substring(2, 4)) - 1, parseInt(timestamp.substring(4, 6)), parseInt(timestamp.substring(6, 8)), parseInt(timestamp.substring(8, 10)), parseInt(timestamp.substring(10, 12)));
+                const totalSeconds = date && this.getTotalSeconds(date.getHours(), date.getMinutes(), date.getSeconds());
+                if (totalSeconds && totalSeconds % 15 == 0)
+                    console.table(output);
                 // if (this.account && timestamp && dayConsumption && dayProduction) {
                 //   const transactionConfig = {
                 //     from: this.account.address,
@@ -240,6 +256,9 @@ class SmartMeterReader {
             }
         }
         return [parseFloat(str.trim()), ''];
+    }
+    getTotalSeconds(hour, minute, second) {
+        return hour * 3600 + minute * 60 + second;
     }
 }
 exports.SmartMeterReader = SmartMeterReader;
