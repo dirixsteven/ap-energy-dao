@@ -1,5 +1,6 @@
 import { ReadlineParser, SerialPort } from 'serialport';
 import * as crc from 'crc';
+import fs from 'fs';
 import { SerialPortStream } from "@serialport/stream";
 import { MockBinding, MockBindingInterface, MockPortBinding } from '@serialport/binding-mock';
 import { obiscodes } from './util/obiscodes';
@@ -39,7 +40,7 @@ export class SmartMeterReader {
   }
 
   public async read() {
-    this.serialPort.on('data', (data: Buffer) => {
+    this.serialPort && this.serialPort.on('data', (data: Buffer) => {
       (data) && this.readLine(data.toString());
     });
     
@@ -105,6 +106,9 @@ export class SmartMeterReader {
         console.log('*'.repeat(40));
       }
       if (this.checkcrc(this.p1telegram)) {
+        // Write telegram to file
+        fs.appendFileSync('./p1telegram.txt', this.p1telegram);
+
         // parse telegram contents, line by line
         const output: P1TelegramLine[] = [];
         for (const line of this.p1telegram.toString().split('\r\n')) {
@@ -116,8 +120,10 @@ export class SmartMeterReader {
             }
           }
         }
-        console.log(this.p1telegram);
+
         console.table(output);
+
+
         let timestamp, dayConsumption, dayProduction;
 
         for (let i = 0; i < output.length; i++) {

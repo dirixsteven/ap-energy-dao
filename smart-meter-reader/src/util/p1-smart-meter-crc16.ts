@@ -58,10 +58,10 @@ var CrcArcTable = new Array(
  *
  * @param  {string} telegram  The calculated CRC16-ARC
  * 
- * @return {string}           Return the calculated CRC16-ARC
+ * @return {number}           Return the calculated CRC16-ARC
  */
 
-function CrcArcStr(telegram)
+function CrcArcStr(telegram: string): number
 {
   var n;
   var len = telegram.length;
@@ -86,7 +86,7 @@ function CrcArcStr(telegram)
  * 
  * @return  {string}    Return the calculated HEX CRC16
  */
-function Dec2Hex16(i) {
+function Dec2Hex16(i: number): string {
    return (i+0x10000).toString(16).substr(-4).toUpperCase();
 }
 
@@ -98,11 +98,11 @@ function Dec2Hex16(i) {
  * @desc  Calculate CRC16 with CR+LF or LF check.
  *
  * @param  {string} telegram     The P1 Smart Meter Telegram
- * @param  {bool}   crlf         Use CR+LF (Windows) or only LF (Unix) for 'newline' 
+ * @param  {boolean}   crlf         Use CR+LF (Windows) or only LF (Unix) for 'newline' 
  * 
- * @return {bool}                Return telegram CRC equals calculated CRC16.
+ * @return {boolean}                Return telegram CRC equals calculated CRC16.
  */
-export function calcCRC16(telegram, crlf) 
+export function calcCRC16(telegram: string, crlf: boolean): boolean 
 {
   // Get the CRC from the telegram
   var CRC_Telegram = telegram.substr(telegram.indexOf('!')+1, telegram.length);
