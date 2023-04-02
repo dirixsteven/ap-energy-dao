@@ -1,34 +1,11 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SmartMeterReader = void 0;
 const serialport_1 = require("serialport");
-const crc = __importStar(require("crc"));
 const stream_1 = require("@serialport/stream");
 const binding_mock_1 = require("@serialport/binding-mock");
 const obiscodes_1 = require("./util/obiscodes");
+const p1_smart_meter_crc16_1 = require("./util/p1-smart-meter-crc16");
 class SmartMeterReader {
     constructor() {
         this.serialPort = null;
@@ -54,12 +31,17 @@ class SmartMeterReader {
         }
     }
     async read() {
-        var _a;
-        const parser = new serialport_1.ReadlineParser({ delimiter: '\r\n', includeDelimiter: true, encoding: 'ascii' });
-        // read input from serial port
-        (_a = this.serialPort) === null || _a === void 0 ? void 0 : _a.pipe(parser).on('data', async (p1line) => {
-            await this.readLine(p1line);
+        this.serialPort.on('data', (data) => {
+            (data) && this.readLine(data.toString());
         });
+        /*
+        const parser = new ReadlineParser({delimiter: '\r\n', includeDelimiter: true, encoding: 'ascii'});
+    
+        // read input from serial port
+        this.serialPort?.pipe(parser).on('data', async (p1line) => {
+          await this.readLine(p1line);
+        })
+        */
     }
     emitTestData(generateTelegram, interval, limit) {
         if (this.serialPort instanceof (stream_1.SerialPortStream))
@@ -125,6 +107,7 @@ class SmartMeterReader {
                         }
                     }
                 }
+                console.log(this.p1telegram);
                 console.table(output);
                 let timestamp, dayConsumption, dayProduction;
                 for (let i = 0; i < output.length; i++) {
@@ -168,23 +151,30 @@ class SmartMeterReader {
     checkcrc(p1telegram) {
         // check CRC16 checksum of telegram and return False if not matching
         // split telegram in contents and CRC16 checksum (format:contents!crc)
+        return (0, p1_smart_meter_crc16_1.calcCRC16)(p1telegram, true);
+        /*
+         *
         for (const match of p1telegram.toString().matchAll(/\r\n(?=!)/g)) {
-            const p1contents = p1telegram.slice(0, match.index + match[0].length);
-            const givencrc = parseInt(p1telegram.slice(match.index + 1 + match[0].length).trim(), 16).toString(16);
-            // calculate checksum of the contents
-            const calccrc = crc.crc16modbus(p1contents);
-            // check if given and calculated match
+          const p1contents = p1telegram.slice(0, match.index! + match[0].length);
+          const givencrc = parseInt(p1telegram.slice(match.index! + 1 + match[0].length).trim(), 16).toString(16);
+          
+          // calculate checksum of the contents
+          const calccrc = crc.crc16modbus(p1contents);
+          //console.log(p1contents);
+          //console.log(`Given checksum: ${givencrc}, Calculated checksum: ${calccrc.toString(16)}`);
+          // check if given and calculated match
+          if (this.debug) {
+            console.log(`Given checksum: ${givencrc}, Calculated checksum: ${calccrc.toString(16)}`);
+          }
+          if (givencrc !== calccrc.toString(16)) {
             if (this.debug) {
-                console.log(`Given checksum: ${givencrc}, Calculated checksum: ${calccrc.toString(16)}`);
+              console.log("Checksum incorrect, skipping...");
             }
-            if (givencrc !== calccrc.toString(16)) {
-                if (this.debug) {
-                    console.log("Checksum incorrect, skipping...");
-                }
-                return false;
-            }
+            return false;
+          }
         }
         return true;
+        */
     }
     parseTelegramLine(p1line) {
         // parse a single line of the telegram and try to get relevant data from it

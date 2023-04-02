@@ -2,7 +2,7 @@
   "name": "middleware",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
     "start": "concurrently \"npm run start-node\" \"npm run start-server\" \"npx hardhat compile && npm run deploy\"",
@@ -29,6 +29,7 @@
     "express": "^4.18.2",
     "hardhat": "^2.13.0",
     "morgan": "^1.10.0",
-    "nodemon": "^2.0.21"
+    "nodemon": "^2.0.21",
+    "spawn-command": "^0.0.2-1"
   }
 }

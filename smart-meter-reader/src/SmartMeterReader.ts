@@ -3,6 +3,7 @@ import * as crc from 'crc';
 import { SerialPortStream } from "@serialport/stream";
 import { MockBinding, MockBindingInterface, MockPortBinding } from '@serialport/binding-mock';
 import { obiscodes } from './util/obiscodes';
+import { calcCRC16 } from './util/p1-smart-meter-crc16';
 
 interface P1TelegramLine {
   obiscode?: string;
@@ -38,12 +39,18 @@ export class SmartMeterReader {
   }
 
   public async read() {
+    this.serialPort.on('data', (data: Buffer) => {
+      (data) && this.readLine(data.toString());
+    });
+    
+    /*
     const parser = new ReadlineParser({delimiter: '\r\n', includeDelimiter: true, encoding: 'ascii'});
 
     // read input from serial port
     this.serialPort?.pipe(parser).on('data', async (p1line) => {
       await this.readLine(p1line);
     })
+    */
   }
 
   public emitTestData(generateTelegram: Function, interval: number, limit: number) {
@@ -109,7 +116,7 @@ export class SmartMeterReader {
             }
           }
         }
-
+        console.log(this.p1telegram);
         console.table(output);
         let timestamp, dayConsumption, dayProduction;
 
@@ -156,13 +163,19 @@ export class SmartMeterReader {
     // check CRC16 checksum of telegram and return False if not matching
     // split telegram in contents and CRC16 checksum (format:contents!crc)
     
+    return calcCRC16(p1telegram, true);
+    
+    
+    /*
+     * 
     for (const match of p1telegram.toString().matchAll(/\r\n(?=!)/g)) {
       const p1contents = p1telegram.slice(0, match.index! + match[0].length);
       const givencrc = parseInt(p1telegram.slice(match.index! + 1 + match[0].length).trim(), 16).toString(16);
       
       // calculate checksum of the contents
       const calccrc = crc.crc16modbus(p1contents);
-
+      //console.log(p1contents);
+      //console.log(`Given checksum: ${givencrc}, Calculated checksum: ${calccrc.toString(16)}`);
       // check if given and calculated match
       if (this.debug) {
         console.log(`Given checksum: ${givencrc}, Calculated checksum: ${calccrc.toString(16)}`);
@@ -175,6 +188,7 @@ export class SmartMeterReader {
       }
     }
     return true;
+    */
   }
 
   private parseTelegramLine(p1line: string)/*: [string, number | string, string, string] | [] */{
