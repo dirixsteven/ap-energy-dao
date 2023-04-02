@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SmartMeterReader = void 0;
 const serialport_1 = require("serialport");
+const fs_1 = __importDefault(require("fs"));
 const stream_1 = require("@serialport/stream");
 const binding_mock_1 = require("@serialport/binding-mock");
 const obiscodes_1 = require("./util/obiscodes");
@@ -31,7 +35,7 @@ class SmartMeterReader {
         }
     }
     async read() {
-        this.serialPort.on('data', (data) => {
+        this.serialPort && this.serialPort.on('data', (data) => {
             (data) && this.readLine(data.toString());
         });
         /*
@@ -96,6 +100,8 @@ class SmartMeterReader {
                 console.log('*'.repeat(40));
             }
             if (this.checkcrc(this.p1telegram)) {
+                // Write telegram to file
+                fs_1.default.appendFileSync('./p1telegram.txt', this.p1telegram);
                 // parse telegram contents, line by line
                 const output = [];
                 for (const line of this.p1telegram.toString().split('\r\n')) {
@@ -107,7 +113,6 @@ class SmartMeterReader {
                         }
                     }
                 }
-                console.log(this.p1telegram);
                 console.table(output);
                 let timestamp, dayConsumption, dayProduction;
                 for (let i = 0; i < output.length; i++) {
