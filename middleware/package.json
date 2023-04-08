@@ -6,17 +6,15 @@
   "scripts": {
     "compile": "tsc",
     "start": "concurrently \"npm run start-node\" \"npm run start-server\" \"npx hardhat compile && npm run deploy\"",
-    "start-node": "npx hardhat node",
+    "start-node": "npx hardhat node --hostname 192.168.44.132",
     "start-server": "concurrently \"tsc --watch\" \"nodemon dist/index.js\"",
-    "deploy": "npx hardhat run --network localhost scripts/deploy.ts",
+    "deploy": "npx hardhat run --network public scripts/deploy.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/cors": "^2.8.13",
-    "@types/morgan": "^1.9.4",
     "typechain": "^8.1.1"
   },
   "dependencies": {
@@ -30,6 +28,8 @@
     "hardhat": "^2.13.0",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.21",
-    "spawn-command": "^0.0.2-1"
+    "spawn-command": "^0.0.2-1",
+    "@types/cors": "^2.8.13",
+    "@types/morgan": "^1.9.4"
   }
 }

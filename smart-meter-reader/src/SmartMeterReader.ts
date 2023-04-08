@@ -16,9 +16,10 @@ interface P1TelegramLine {
 export class SmartMeterReader {
   private static instance: SmartMeterReader;
   public serialPort: SerialPort | SerialPortStream<MockBindingInterface> | null = null;
-  private debug: boolean = false;
   private p1telegram: string = '';
   private mock: boolean = false;
+  private debug: boolean = false;
+  private interval: number = 0;
 
   private constructor() {
   };
@@ -30,15 +31,15 @@ export class SmartMeterReader {
     return SmartMeterReader.instance;
   }
 
-  public async initializePort(path: string, mock: boolean, debug: boolean = false) {
+  public async initializePort(path: string, mock: boolean, debug: boolean = false, interval: number = 15) {
+    this.mock = mock;
     this.debug = debug;
+    this.interval = interval;
     if (!mock) {
       this.serialPort = new SerialPort({ path, baudRate: 115200 });
-      this.mock = false;
     } else {
       // Create a port and enable the echo and recording.
       MockBinding.createPort(path, { echo: true, record: true });
-      this.mock = true;
       this.serialPort = new SerialPortStream({ binding: MockBinding, path, baudRate: 115200 });
     }
   }
@@ -154,7 +155,7 @@ export class SmartMeterReader {
         
         const totalSeconds = date && this.getTotalSeconds(date.getHours(), date.getMinutes(), date.getSeconds())
         
-        if (totalSeconds && totalSeconds % 15 == 0) console.table(output);
+        if (totalSeconds && totalSeconds % this.interval == 0) console.table(output);
         // if (this.account && timestamp && dayConsumption && dayProduction) {
         //   const transactionConfig = {
         //     from: this.account.address,

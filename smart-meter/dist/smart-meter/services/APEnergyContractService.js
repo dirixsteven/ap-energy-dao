@@ -41,7 +41,7 @@ class APEnergyContractService {
             };
         });
         // Connect to the Ethereum network and create a contract instance
-        this.web3 = new web3_1.default(new web3_1.default.providers.HttpProvider('http://127.0.0.1:8545'));
+        this.web3 = new web3_1.default(new web3_1.default.providers.HttpProvider('http://192.168.44.132:8545'));
         this.address = address;
         const contractAbi = APEnergy_json_1.default.abi;
         this.contract = new this.web3.eth.Contract(contractAbi, this.address);
@@ -132,7 +132,7 @@ exports.APEnergyContractService = APEnergyContractService;
 _a = APEnergyContractService;
 APEnergyContractService.getInstance = () => __awaiter(void 0, void 0, void 0, function* () {
     if (!APEnergyContractService.instance) {
-        const address = yield fetch('http://127.0.0.1:3001/getContractAddress').then((response) => __awaiter(void 0, void 0, void 0, function* () {
+        const address = yield fetch('http://192.168.44.132:3001/getContractAddress').then((response) => __awaiter(void 0, void 0, void 0, function* () {
             return yield response.json();
         })).catch(reason => { console.log(reason); });
         APEnergyContractService.instance = new APEnergyContractService(address);

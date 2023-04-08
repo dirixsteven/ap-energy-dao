@@ -14,9 +14,10 @@ const p1_smart_meter_crc16_1 = require("./util/p1-smart-meter-crc16");
 class SmartMeterReader {
     constructor() {
         this.serialPort = null;
-        this.debug = false;
         this.p1telegram = '';
         this.mock = false;
+        this.debug = false;
+        this.interval = 0;
     }
     ;
     static getInstance() {
@@ -25,16 +26,16 @@ class SmartMeterReader {
         }
         return SmartMeterReader.instance;
     }
-    async initializePort(path, mock, debug = false) {
+    async initializePort(path, mock, debug = false, interval = 15) {
+        this.mock = mock;
         this.debug = debug;
+        this.interval = interval;
         if (!mock) {
             this.serialPort = new serialport_1.SerialPort({ path, baudRate: 115200 });
-            this.mock = false;
         }
         else {
             // Create a port and enable the echo and recording.
             binding_mock_1.MockBinding.createPort(path, { echo: true, record: true });
-            this.mock = true;
             this.serialPort = new stream_1.SerialPortStream({ binding: binding_mock_1.MockBinding, path, baudRate: 115200 });
         }
     }
@@ -140,7 +141,7 @@ class SmartMeterReader {
                 }
                 const date = timestamp && new Date(parseInt(timestamp.substring(0, 2)) + 2000, parseInt(timestamp.substring(2, 4)) - 1, parseInt(timestamp.substring(4, 6)), parseInt(timestamp.substring(6, 8)), parseInt(timestamp.substring(8, 10)), parseInt(timestamp.substring(10, 12)));
                 const totalSeconds = date && this.getTotalSeconds(date.getHours(), date.getMinutes(), date.getSeconds());
-                if (totalSeconds && totalSeconds % 15 == 0)
+                if (totalSeconds && totalSeconds % this.interval == 0)
                     console.table(output);
                 // if (this.account && timestamp && dayConsumption && dayProduction) {
                 //   const transactionConfig = {

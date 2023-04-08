@@ -4,8 +4,9 @@ const SmartMeterReader_1 = require("./SmartMeterReader");
 const serialport = '/dev/ttyUSB0';
 const mock = true;
 const debug = false;
+const interval = 15;
 const initializeSmartMeter = async () => {
-    await SmartMeterReader_1.SmartMeterReader.getInstance().initializePort(serialport, mock, debug);
+    await SmartMeterReader_1.SmartMeterReader.getInstance().initializePort(serialport, mock, debug, interval);
     SmartMeterReader_1.SmartMeterReader.getInstance().read();
     return true;
 };

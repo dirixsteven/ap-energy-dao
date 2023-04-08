@@ -14,7 +14,7 @@ export class APEnergyContractService {
 
   private constructor(address: string) {
     // Connect to the Ethereum network and create a contract instance
-    this.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545'));
+    this.web3 = new Web3(new Web3.providers.HttpProvider('http://192.168.44.132:8545'));
     this.address = address;
     const contractAbi = APEnergyArtifact.abi;
 
@@ -23,7 +23,7 @@ export class APEnergyContractService {
 
   public static getInstance = async(): Promise<APEnergyContractService> => {
     if (!APEnergyContractService.instance) {
-      const address = await fetch('http://127.0.0.1:3001/getContractAddress').then(async (response) => {
+      const address = await fetch('http://192.168.44.132:3001/getContractAddress').then(async (response) => {
         return await response.json();
       }).catch(reason => {console.log(reason)});
       APEnergyContractService.instance = new APEnergyContractService(address);
@@ -52,7 +52,7 @@ export class APEnergyContractService {
     }
 
     return {
-      message: result ||`wallet funded: Wallet ${account.address} funded for ${await this.web3.eth.getBalance(account.address)}`,
+      message: result || `wallet funded: Wallet ${account.address} funded for ${await this.web3.eth.getBalance(account.address)}`,
       account: account.address
     }
   };
