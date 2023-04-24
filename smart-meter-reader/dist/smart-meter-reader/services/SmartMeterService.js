@@ -9,8 +9,8 @@ const fs_1 = __importDefault(require("fs"));
 const readline_1 = __importDefault(require("readline"));
 const stream_1 = require("@serialport/stream");
 const binding_mock_1 = require("@serialport/binding-mock");
-const obiscodes_1 = require("./util/obiscodes");
-const p1_smart_meter_crc16_1 = require("./util/p1-smart-meter-crc16");
+const obiscodes_1 = require("../util/obiscodes");
+const p1_smart_meter_crc16_1 = require("../util/p1-smart-meter-crc16");
 class SmartMeterReader {
     constructor() {
         this.serialPort = null;
@@ -26,7 +26,7 @@ class SmartMeterReader {
         }
         return SmartMeterReader.instance;
     }
-    async initializePort(path, mock, debug = false, interval = 15) {
+    async initializeReader(path, mock, debug = false, interval = 15, account) {
         this.mock = mock;
         this.debug = debug;
         this.interval = interval;
@@ -38,6 +38,7 @@ class SmartMeterReader {
             binding_mock_1.MockBinding.createPort(path, { echo: true, record: true });
             this.serialPort = new stream_1.SerialPortStream({ binding: binding_mock_1.MockBinding, path, baudRate: 115200 });
         }
+        this.account = account;
     }
     async read() {
         if (this.mock) {

@@ -4,8 +4,10 @@ import fs from 'fs';
 import readline from 'readline';
 import { SerialPortStream } from "@serialport/stream";
 import { MockBinding, MockBindingInterface, MockPortBinding } from '@serialport/binding-mock';
-import { obiscodes } from './util/obiscodes';
-import { calcCRC16 } from './util/p1-smart-meter-crc16';
+import { obiscodes } from '../util/obiscodes';
+import { calcCRC16 } from '../util/p1-smart-meter-crc16';
+import { APEnergyContractService } from './APEnergyContractService';
+import { Account } from 'web3-core';
 
 interface P1TelegramLine {
   obiscode?: string;
@@ -20,6 +22,7 @@ export class SmartMeterReader {
   private mock: boolean = false;
   private debug: boolean = false;
   private interval: number = 0;
+  private account: Account | undefined;
 
   private constructor() {
   };
@@ -31,7 +34,7 @@ export class SmartMeterReader {
     return SmartMeterReader.instance;
   }
 
-  public async initializePort(path: string, mock: boolean, debug: boolean = false, interval: number = 15) {
+  public async initializeReader(path: string, mock: boolean, debug: boolean = false, interval: number = 15, account: Account) {
     this.mock = mock;
     this.debug = debug;
     this.interval = interval;
@@ -42,6 +45,7 @@ export class SmartMeterReader {
       MockBinding.createPort(path, { echo: true, record: true });
       this.serialPort = new SerialPortStream({ binding: MockBinding, path, baudRate: 115200 });
     }
+    this.account = account;
   }
 
   public async read() {
@@ -184,7 +188,6 @@ export class SmartMeterReader {
         //     dayProduction: events[0].returnValues["dayProduction"]
         //   });
         // }
-
       }
     }
   }

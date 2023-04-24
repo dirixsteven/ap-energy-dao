@@ -9,7 +9,7 @@ const config = {
     },
     networks: {
         public: {
-            url: "http://192.168.44.132:8545"
+            url: "http://192.168.1.13:8545"
         }
     }
 };
