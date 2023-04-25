@@ -165,8 +165,7 @@ export class SmartMeterReader {
         
         if (this.account && timestamp && dayConsumption && dayProduction && totalSeconds && totalSeconds % this.interval == 0) {
           const result = await (await APEnergyContractService.getInstance()).logPowerConsumption(this.account, Number(timestamp), dayConsumption, dayProduction);
-          console.log(JSON.stringify(result));
-          
+          console.log(result.transactionReceipt);
         }
           //console.table(output);
       }

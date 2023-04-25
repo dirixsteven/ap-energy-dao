@@ -125,7 +125,8 @@ export class APEnergyContractService {
 
     return {
       message: result ||`log power consumption: ${resource}`,
-      account: resource.address
+      account: resource.address,
+      transactionReceipt: transactionReceipt
     }
   }
 

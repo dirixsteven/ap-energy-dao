@@ -94,7 +94,8 @@ class APEnergyContractService {
         }).catch(error => result = error);
         return {
             message: result || `log power consumption: ${resource}`,
-            account: resource.address
+            account: resource.address,
+            transactionReceipt: transactionReceipt
         };
     }
     async getResourcePowerConsumption(resource) {
