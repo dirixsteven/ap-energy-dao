@@ -150,7 +150,7 @@ class SmartMeterReader {
                 const totalSeconds = date && this.getTotalSeconds(date.getHours(), date.getMinutes(), date.getSeconds());
                 if (this.account && timestamp && dayConsumption && dayProduction && totalSeconds && totalSeconds % this.interval == 0) {
                     const result = await (await APEnergyContractService_1.APEnergyContractService.getInstance()).logPowerConsumption(this.account, Number(timestamp), dayConsumption, dayProduction);
-                    console.log(result);
+                    console.log(JSON.stringify(result));
                 }
                 //console.table(output);
             }
