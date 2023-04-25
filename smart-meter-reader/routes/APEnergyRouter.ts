@@ -13,6 +13,7 @@ class APEnergyRouter {
     private init() {
         this.router.get('/initializeMeter', this.initializeMeter);
         this.router.get('/startReader', this.startReader);
+        this.router.get('/closeReader', this.closeReader);
         this.router.get('/startTest', this.startTest);
         // ADD INITIALIZE SMART-METER
         // ADD LOG POWER CONSUMPTION HERE
@@ -33,6 +34,12 @@ class APEnergyRouter {
     private async startReader(req: Request, res: Response) {
         SmartMeterReader.getInstance().read();
     
+        return true;
+    }
+
+    private async closeReader() {
+        SmartMeterReader.getInstance().close();
+
         return true;
     }
 

@@ -5,9 +5,9 @@ smart-meter-reader/node_modules
 coverage
 coverage.json
 typechain
-typechain-types
+# typechain-types
 
 # Hardhat files
 cache
-artifacts
+# artifacts
 
