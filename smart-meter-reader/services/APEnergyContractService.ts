@@ -124,7 +124,7 @@ export class APEnergyContractService {
     }).catch(error => result = error)
 
     return {
-      message: result ||`log power consumtion: ${resource}`,
+      message: result ||`log power consumption: ${resource}`,
       account: resource.address
     }
   }

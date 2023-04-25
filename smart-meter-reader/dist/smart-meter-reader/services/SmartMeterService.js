@@ -11,6 +11,7 @@ const stream_1 = require("@serialport/stream");
 const binding_mock_1 = require("@serialport/binding-mock");
 const obiscodes_1 = require("../util/obiscodes");
 const p1_smart_meter_crc16_1 = require("../util/p1-smart-meter-crc16");
+const APEnergyContractService_1 = require("./APEnergyContractService");
 class SmartMeterReader {
     constructor() {
         this.serialPort = null;
@@ -26,7 +27,7 @@ class SmartMeterReader {
         }
         return SmartMeterReader.instance;
     }
-    async initializeReader(path, mock, debug = false, interval = 15, account) {
+    async initializeReader(path, mock, debug = false, interval = 15) {
         this.mock = mock;
         this.debug = debug;
         this.interval = interval;
@@ -38,7 +39,9 @@ class SmartMeterReader {
             binding_mock_1.MockBinding.createPort(path, { echo: true, record: true });
             this.serialPort = new stream_1.SerialPortStream({ binding: binding_mock_1.MockBinding, path, baudRate: 115200 });
         }
-        this.account = account;
+        if (!this.account) {
+            this.account = await (await APEnergyContractService_1.APEnergyContractService.getInstance()).createAccount();
+        }
     }
     async read() {
         if (this.mock) {
@@ -91,6 +94,9 @@ class SmartMeterReader {
         console.log('Stopping...');
         (_a = this.serialPort) === null || _a === void 0 ? void 0 : _a.close();
     }
+    getAccount() {
+        return this.account;
+    }
     async readLine(p1line) {
         var _a, _b, _c;
         if (p1line.toString().includes('/')) {
@@ -142,32 +148,11 @@ class SmartMeterReader {
                 }
                 const date = timestamp && new Date(parseInt(timestamp.substring(0, 2)) + 2000, parseInt(timestamp.substring(2, 4)) - 1, parseInt(timestamp.substring(4, 6)), parseInt(timestamp.substring(6, 8)), parseInt(timestamp.substring(8, 10)), parseInt(timestamp.substring(10, 12)));
                 const totalSeconds = date && this.getTotalSeconds(date.getHours(), date.getMinutes(), date.getSeconds());
-                if (totalSeconds && totalSeconds % this.interval == 0)
-                    console.table(output);
-                // if (this.account && timestamp && dayConsumption && dayProduction) {
-                //   const transactionConfig = {
-                //     from: this.account.address,
-                //     to: contractAddress,
-                //     // value: 0,
-                //     gasPrice: await web3.eth.getGasPrice(),
-                //     gasLimit: 30000000,
-                //     nonce: await web3.eth.getTransactionCount(this.account.address),
-                //     data: contract.methods.logPowerConsumption(timestamp, dayConsumption, dayProduction).encodeABI()
-                //   }
-                //   const signedTransaction = await web3.eth.accounts.signTransaction(transactionConfig, this.account.privateKey);
-                //   const transactionReceipt = await web3.eth.sendSignedTransaction(signedTransaction.rawTransaction);
-                //   const events = await contract.getPastEvents('allEvents', {
-                //     fromBlock: transactionReceipt && transactionReceipt.blockNumber,
-                //     toBlock: transactionReceipt && transactionReceipt.blockNumber
-                //   })
-                //   console.log({
-                //     event: events[0].event, 
-                //     resource: events[0].returnValues["resource"],
-                //     timestamp: events[0].returnValues["timestamp"],
-                //     dayConsumption: events[0].returnValues["dayConsumption"],
-                //     dayProduction: events[0].returnValues["dayProduction"]
-                //   });
-                // }
+                if (this.account && timestamp && dayConsumption && dayProduction && totalSeconds && totalSeconds % this.interval == 0) {
+                    const result = await (await APEnergyContractService_1.APEnergyContractService.getInstance()).logPowerConsumption(this.account, Number(timestamp), dayConsumption, dayProduction);
+                    console.log(result);
+                }
+                //console.table(output);
             }
         }
     }

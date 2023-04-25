@@ -17,13 +17,13 @@ class APEnergyRouter {
         // ADD LOG POWER CONSUMPTION HERE
     }
     async initializeMeter(req, res) {
-        const account = await (await APEnergyContractService_1.APEnergyContractService.getInstance()).createAccount();
         const serialport = '/dev/ttyUSB0';
-        const mock = true;
-        const debug = false;
-        const interval = 15;
-        await SmartMeterService_1.SmartMeterReader.getInstance().initializeReader(serialport, mock, debug, interval, account);
-        res.json(account.address);
+        const mock = req.query.mock === "0" ? false : true;
+        const debug = req.query.debug === "0" ? false : true;
+        const interval = Number(req.query.interval);
+        console.log(interval);
+        await SmartMeterService_1.SmartMeterReader.getInstance().initializeReader(serialport, mock, debug, interval);
+        res.json(SmartMeterService_1.SmartMeterReader.getInstance().getAccount());
     }
     ;
     async startReader(req, res) {

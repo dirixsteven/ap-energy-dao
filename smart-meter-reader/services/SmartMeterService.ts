@@ -34,7 +34,7 @@ export class SmartMeterReader {
     return SmartMeterReader.instance;
   }
 
-  public async initializeReader(path: string, mock: boolean, debug: boolean = false, interval: number = 15, account: Account) {
+  public async initializeReader(path: string, mock: boolean, debug: boolean = false, interval: number = 15) {
     this.mock = mock;
     this.debug = debug;
     this.interval = interval;
@@ -45,7 +45,9 @@ export class SmartMeterReader {
       MockBinding.createPort(path, { echo: true, record: true });
       this.serialPort = new SerialPortStream({ binding: MockBinding, path, baudRate: 115200 });
     }
-    this.account = account;
+    if (!this.account) {
+      this.account = await (await APEnergyContractService.getInstance()).createAccount();
+    }
   }
 
   public async read() {
@@ -101,6 +103,10 @@ export class SmartMeterReader {
     this.serialPort?.close();
   }
 
+  public getAccount() {
+    return this.account;
+  }
+
   private async readLine(p1line: string) {
     if (p1line.toString().includes('/')) {
       // code to handle lines starting with '/'
@@ -153,41 +159,18 @@ export class SmartMeterReader {
           parseInt(timestamp.substring(2, 4)) - 1,
           parseInt(timestamp.substring(4, 6)), 
           parseInt(timestamp.substring(6, 8)), 
-          parseInt(timestamp.substring(8, 10)), 
+          parseInt(timestamp.substring(8, 10)),
           parseInt(timestamp.substring(10, 12))
         );        
         
         const totalSeconds = date && this.getTotalSeconds(date.getHours(), date.getMinutes(), date.getSeconds())
         
-        if (totalSeconds && totalSeconds % this.interval == 0) console.table(output);
-        // if (this.account && timestamp && dayConsumption && dayProduction) {
-        //   const transactionConfig = {
-        //     from: this.account.address,
-        //     to: contractAddress,
-        //     // value: 0,
-        //     gasPrice: await web3.eth.getGasPrice(),
-        //     gasLimit: 30000000,
-        //     nonce: await web3.eth.getTransactionCount(this.account.address),
-        //     data: contract.methods.logPowerConsumption(timestamp, dayConsumption, dayProduction).encodeABI()
-        //   }
-
-        //   const signedTransaction = await web3.eth.accounts.signTransaction(transactionConfig, this.account.privateKey);
-
-        //   const transactionReceipt = await web3.eth.sendSignedTransaction(signedTransaction.rawTransaction);
-        
-        //   const events = await contract.getPastEvents('allEvents', {
-        //     fromBlock: transactionReceipt && transactionReceipt.blockNumber,
-        //     toBlock: transactionReceipt && transactionReceipt.blockNumber
-        //   })
-        
-        //   console.log({
-        //     event: events[0].event, 
-        //     resource: events[0].returnValues["resource"],
-        //     timestamp: events[0].returnValues["timestamp"],
-        //     dayConsumption: events[0].returnValues["dayConsumption"],
-        //     dayProduction: events[0].returnValues["dayProduction"]
-        //   });
-        // }
+        if (this.account && timestamp && dayConsumption && dayProduction && totalSeconds && totalSeconds % this.interval == 0) {
+          const result = await (await APEnergyContractService.getInstance()).logPowerConsumption(this.account, Number(timestamp), dayConsumption, dayProduction);
+          console.log(result);
+          
+        }
+          //console.table(output);
       }
     }
   }

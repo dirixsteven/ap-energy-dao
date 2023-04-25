@@ -20,15 +20,15 @@ class APEnergyRouter {
     }
 
     private async initializeMeter(req: Request, res: Response) {
-        const account = await (await APEnergyContractService.getInstance()).createAccount();
-
         const serialport = '/dev/ttyUSB0';
-        const mock = true
-        const debug = false;
-        const interval = 15;
-        await SmartMeterReader.getInstance().initializeReader(serialport, mock, debug, interval, account);
+        const mock = req.query.mock === "0" ? false : true;
+        const debug = req.query.debug === "0" ? false : true;
+        const interval = Number(req.query.interval);
+        console.log(interval);
+        
+        await SmartMeterReader.getInstance().initializeReader(serialport, mock, debug, interval);
 
-        res.json(account.address);
+        res.json(SmartMeterReader.getInstance().getAccount());
     };
 
     private async startReader(req: Request, res: Response) {

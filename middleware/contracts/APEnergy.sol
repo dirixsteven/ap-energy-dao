@@ -100,7 +100,7 @@ contract APEnergy is AccessControl {
     }
   }
 
-  function logPowerConsumption(uint256 _timestamp, string calldata _dayConsumption, string calldata _dayProduction) public resourceOnly("Only Resources can log power") {
+  function logPowerConsumption(uint256 _timestamp, string calldata _dayConsumption, string calldata _dayProduction) public /* resourceOnly("Only Resources can log power") */ {
     // note: timestamp can possible be replaced with block.timestamp
     ResourceLoggedPower[msg.sender].push(LoggedPower(_timestamp, _dayConsumption, _dayProduction));
     
