@@ -14,7 +14,7 @@ export class APEnergyContractService {
 
   private constructor(address: string) {
     // Connect to the Ethereum network and create a contract instance
-    this.web3 = new Web3(new Web3.providers.HttpProvider('http://192.168.44.130:8545'));
+    this.web3 = new Web3(new Web3.providers.HttpProvider('http://192.168.1.13:8545'));
     this.address = address;
     const contractAbi = APEnergyArtifact.abi;
 
@@ -23,7 +23,7 @@ export class APEnergyContractService {
 
   public static getInstance = async(): Promise<APEnergyContractService> => {
     if (!APEnergyContractService.instance) {
-      const address = await fetch('http://192.168.44.130:3001/getContractAddress').then(async (response) => {
+      const address = await fetch('http://192.168.1.13:3001/getContractAddress').then(async (response) => {
         return await response.json();
       }).catch(reason => {console.log(reason)});
       APEnergyContractService.instance = new APEnergyContractService(address);

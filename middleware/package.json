@@ -6,7 +6,7 @@
   "scripts": {
     "compile": "tsc",
     "start": "concurrently \"npm run start-node\" \"npm run start-server\" \"npx hardhat compile && npm run deploy\"",
-    "start-node": "npx hardhat node --hostname 192.168.44.130",
+    "start-node": "npx hardhat node --hostname 192.168.1.13",
     "start-server": "concurrently \"tsc --watch\" \"nodemon dist/index.js\"",
     "deploy": "npx hardhat run --network public scripts/deploy.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
