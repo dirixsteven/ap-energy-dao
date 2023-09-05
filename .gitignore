@@ -1,6 +1,7 @@
 middleware/node_modules
 smart-meter/node_modules
 smart-meter-reader/node_modules
+# ap-energy-web/node_modules
 .env
 coverage
 coverage.json
