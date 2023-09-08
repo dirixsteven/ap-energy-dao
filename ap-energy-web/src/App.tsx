@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { APEnergyContractService } from "./service/APEnergyContractService"
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Routes } from "react-router-dom";
 
 export const App = () => {
   const energyContractService = APEnergyContractService.getInstance();
